@@ -28,7 +28,8 @@ document.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener("cli
 
 // ---------- the hero film, scrubbed across the story ----------
 const bgVideo = document.getElementById("bgv");
-const STATIC_HERO = matchMedia("(max-width: 768px), (hover: none), (prefers-reduced-motion: reduce)");
+const STATIC_HERO = matchMedia("(prefers-reduced-motion: reduce)");
+const PHONE = matchMedia("(max-width: 768px), (hover: none)").matches;
 const story = document.getElementById("story");
 let seekBusy = false, pendingTime = null, lastVideoT = -1;
 function requestSeek(t) {
@@ -52,25 +53,22 @@ function scrubVideo() { requestSeek(shape(storyProgress()) * (bgVideo.duration -
 async function initVideo() {
   if (STATIC_HERO.matches) return;
   try {
-    const res = await fetch("/film.mp4");
+    // Phones get a vertical cut of the same film (5 MB instead of 8 MB, framed for a tall screen).
+    const res = await fetch(PHONE ? "/film-mobile.mp4" : "/film.mp4");
     if (!res.ok) throw new Error(res.status);
     bgVideo.src = URL.createObjectURL(await res.blob());
     bgVideo.load();
-    bgVideo.addEventListener("loadedmetadata", () => { scrubVideo(); document.body.classList.add("video-ready"); }, { once: true });
+    bgVideo.addEventListener("loadedmetadata", async () => {
+      // iOS Safari only paints frames of a video that has played once, so prime it silently.
+      try { await bgVideo.play(); bgVideo.pause(); } catch {}
+      lastVideoT = -1; scrubVideo();
+      document.body.classList.add("video-ready");
+    }, { once: true });
     lenis.on("scroll", scrubVideo);
+    addEventListener("scroll", scrubVideo, { passive: true });
   } catch { document.body.classList.add("video-failed"); }
 }
 initVideo();
-
-// Phones: no 8 MB scrub film, but a light muted loop of the bean so the hero still moves.
-const mobVideo = document.getElementById("mobv");
-if (STATIC_HERO.matches && !REDUCED && mobVideo) {
-  mobVideo.src = "/hero-loop.mp4";
-  mobVideo.addEventListener("playing", () => document.body.classList.add("mob-ready"), { once: true });
-  const tryPlay = () => mobVideo.play().catch(() => {});
-  tryPlay();
-  addEventListener("touchstart", tryPlay, { once: true, passive: true });
-}
 
 // ---------- after the story, the resting frame dims behind the sections ----------
 gsap.to(".stage-dim", { opacity: 0.8, ease: "none",

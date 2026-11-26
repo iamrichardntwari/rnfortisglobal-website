@@ -1,0 +1,24 @@
+{
+  "name": "rnfortisglobal-website",
+  "version": "1.0.0",
+  "description": "RN Fortis Global Trading website",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "RN Fortis Global Trading Inc.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "gsap": "^3.15.1",
+    "lenis": "^1.3.28",
+    "three": "^0.187.0",
+    "vite": "^8.4.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  // RN Fortis Global Trading: a static site served by Cloudflare Workers.
+  // Cloudflare builds it with `npm run build`, then serves ./dist.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rnfortisglobal-website",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    { "pattern": "rnfortisglobal.com", "custom_domain": true },
+    { "pattern": "www.rnfortisglobal.com", "custom_domain": true }
+  ]
+}

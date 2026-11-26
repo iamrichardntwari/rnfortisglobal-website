@@ -53,22 +53,71 @@ function scrubVideo() { requestSeek(shape(storyProgress()) * (bgVideo.duration -
 async function initVideo() {
   if (STATIC_HERO.matches) return;
   try {
-    // Phones get a vertical cut of the same film (5 MB instead of 8 MB, framed for a tall screen).
-    const res = await fetch(PHONE ? "/film-mobile.mp4" : "/film.mp4");
+    const res = await fetch("/film.mp4");
     if (!res.ok) throw new Error(res.status);
     bgVideo.src = URL.createObjectURL(await res.blob());
     bgVideo.load();
-    bgVideo.addEventListener("loadedmetadata", async () => {
-      // iOS Safari only paints frames of a video that has played once, so prime it silently.
-      try { await bgVideo.play(); bgVideo.pause(); } catch {}
+    bgVideo.addEventListener("loadedmetadata", () => {
       lastVideoT = -1; scrubVideo();
       document.body.classList.add("video-ready");
     }, { once: true });
     lenis.on("scroll", scrubVideo);
-    addEventListener("scroll", scrubVideo, { passive: true });
   } catch { document.body.classList.add("video-failed"); }
 }
-initVideo();
+
+// Phones: iPhones won't reliably seek a paused video (Low Power Mode blocks it outright),
+// so they get the same film as 169 vertical frames drawn on a canvas as you scroll.
+const FRAMES = 169;
+function initFrames() {
+  if (STATIC_HERO.matches) return;
+  const cv = document.getElementById("seq"), ctx = cv.getContext("2d");
+  const imgs = new Array(FRAMES).fill(null);
+  let shownImg = null, queued = false;
+  const pick = (i) => {
+    for (let k = 0; k < FRAMES; k++) {
+      if (imgs[i - k]?.ok) return imgs[i - k];
+      if (imgs[i + k]?.ok) return imgs[i + k];
+    }
+    return null;
+  };
+  function draw() {
+    queued = false;
+    const img = pick(Math.round(shape(storyProgress()) * (FRAMES - 1)));
+    if (!img || img === shownImg) return;
+    shownImg = img;
+    const s = Math.max(cv.width / img.naturalWidth, cv.height / img.naturalHeight);
+    const w = img.naturalWidth * s, h = img.naturalHeight * s;
+    ctx.drawImage(img, (cv.width - w) / 2, (cv.height - h) / 2, w, h);
+  }
+  const schedule = () => { if (!queued) { queued = true; requestAnimationFrame(draw); } };
+  const size = () => {
+    const d = Math.min(devicePixelRatio || 1, 2);
+    cv.width = Math.round(innerWidth * d); cv.height = Math.round(innerHeight * d);
+    shownImg = null; schedule();
+  };
+  // Load the first frame, then a coarse pass across the film, then fill in, so scrubbing works early.
+  const order = [0];
+  for (const step of [24, 8, 2, 1]) for (let i = 0; i < FRAMES; i += step) if (!order.includes(i)) order.push(i);
+  let next = 0;
+  const loadOne = () => {
+    if (next >= order.length) return;
+    const i = order[next++], img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      img.ok = true; imgs[i] = img;
+      if (i === 0) document.body.classList.add("seq", "video-ready");
+      schedule(); loadOne();
+    };
+    img.onerror = loadOne;
+    img.src = `/frames/f${String(i + 1).padStart(3, "0")}.webp`;
+  };
+  for (let n = 0; n < 6; n++) loadOne();
+  size();
+  addEventListener("resize", size);
+  addEventListener("scroll", schedule, { passive: true });
+  lenis.on("scroll", schedule);
+}
+PHONE ? initFrames() : initVideo();
 
 // ---------- after the story, the resting frame dims behind the sections ----------
 gsap.to(".stage-dim", { opacity: 0.8, ease: "none",

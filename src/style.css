@@ -29,6 +29,9 @@ img, video { max-width: 100%; display: block; }
 .stage-poster, .bg-video { z-index: 0; object-fit: cover; object-position: 62% 50%; }
 body.video-ready .stage-poster { opacity: 0; transition: opacity .6s ease; }
 body.video-failed .bg-video { display: none; }
+.bg-seq { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: none; }
+body.seq .bg-seq { display: block; }
+body.seq .bg-video { display: none; }
 .stage-dim { z-index: 1; background: var(--bg); opacity: 0; pointer-events: none; }
 #atmos { z-index: 2; pointer-events: none; }
 #page { position: relative; z-index: 10; }

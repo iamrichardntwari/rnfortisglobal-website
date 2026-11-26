@@ -62,6 +62,16 @@ async function initVideo() {
 }
 initVideo();
 
+// Phones: no 8 MB scrub film, but a light muted loop of the bean so the hero still moves.
+const mobVideo = document.getElementById("mobv");
+if (STATIC_HERO.matches && !REDUCED && mobVideo) {
+  mobVideo.src = "/hero-loop.mp4";
+  mobVideo.addEventListener("playing", () => document.body.classList.add("mob-ready"), { once: true });
+  const tryPlay = () => mobVideo.play().catch(() => {});
+  tryPlay();
+  addEventListener("touchstart", tryPlay, { once: true, passive: true });
+}
+
 // ---------- after the story, the resting frame dims behind the sections ----------
 gsap.to(".stage-dim", { opacity: 0.8, ease: "none",
   scrollTrigger: { trigger: "#story", start: "bottom 95%", end: "bottom 35%", scrub: true } });

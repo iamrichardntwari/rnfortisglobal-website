@@ -244,6 +244,8 @@ details p { color: var(--muted); padding: 0 0 22px; max-width: 40em; }
 .direct div { display: grid; grid-template-columns: 96px minmax(0, 1fr); }
 .direct dt { color: var(--muted); }
 .direct dd { margin: 0; font-weight: 500; user-select: all; }
+.direct dd a { color: inherit; text-decoration: none; }
+.direct dd a:hover { color: var(--accent); }
 .form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-content: start; }
 .form label { display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
 .form .full { grid-column: 1 / -1; }

@@ -253,6 +253,8 @@ details p { color: var(--muted); padding: 0 0 22px; max-width: 40em; }
 .form input:focus, .form textarea:focus { border-color: var(--accent-2); outline: none; }
 .form input[aria-invalid="true"] { border-color: var(--accent); }
 .form textarea { resize: vertical; min-height: 140px; }
+.form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.btn:disabled { opacity: .6; cursor: progress; }
 .fnote { color: var(--muted); font-size: 15px; min-height: 1.5em; }
 .fnote b { color: var(--text); }
 .fnote a { color: var(--accent-2); }

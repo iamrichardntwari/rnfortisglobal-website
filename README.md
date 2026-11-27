@@ -21,7 +21,7 @@ The site is a Cloudflare Worker that serves static assets. `wrangler.jsonc` poin
 - Node version: 22 (set by `.node-version`).
 
 ## Where enquiries go
-The site shows inquiries@rnfortisglobal.com and sales@rnfortisglobal.com. The form doesn't send to a server. It checks the fields and opens the visitor's email app with the enquiry addressed to inquiries@rnfortisglobal.com (the `EMAIL` constant in `src/main.js`).
+The site shows info@rnfortisglobal.com and sales@rnfortisglobal.com. The form doesn't send to a server. It checks the fields and opens the visitor's email app with the enquiry addressed to info@rnfortisglobal.com (the `EMAIL` constant in `src/main.js`).
 
 ## Media
 - `public/film.mp4`: the scroll-scrubbed hero film (H.264, a keyframe every 8 frames). Phones and visitors who prefer reduced motion see `public/img/hero.jpg` instead.

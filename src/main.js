@@ -189,10 +189,14 @@ const vol = document.getElementById("f-volume");
 document.querySelectorAll("[data-lot]").forEach((a) => a.addEventListener("click", () => { vol.value = "Coffee lot " + a.dataset.lot + ", one full container"; }));
 document.querySelectorAll("[data-prefill]").forEach((a) => a.addEventListener("click", () => { if (!vol.value) vol.value = a.dataset.prefill; }));
 
-// ---------- enquiry form: no server yet, so it prepares the email in the visitor's mail app ----------
-const EMAIL = "inquiries@rnfortisglobal.com";
+// ---------- enquiry form: delivered to the info inbox by Web3Forms ----------
+// The access key is public by design (Web3Forms only ever sends to the inbox it was issued for).
+// Without a key the form falls back to opening the visitor's email app.
+const EMAIL = "info@rnfortisglobal.com";
+const WEB3FORMS_KEY = "";
 const form = document.getElementById("form"), note = document.getElementById("fnote");
-form.addEventListener("submit", (e) => {
+const sendBtn = form.querySelector('button[type="submit"]');
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
   let ok = true;
   form.querySelectorAll("[required]").forEach((f) => {
@@ -205,11 +209,38 @@ form.addEventListener("submit", (e) => {
   const subject = "Trade enquiry from " + (d.get("company") || d.get("name"));
   const body = `Name: ${d.get("name")}\nCompany: ${d.get("company") || "-"}\nEmail: ${d.get("email")}\nProduct and volume: ${d.get("volume") || "-"}\n\n${d.get("message") || ""}`;
   const href = "mailto:" + EMAIL + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
-  note.innerHTML = "";
-  const b = document.createElement("b"); b.textContent = "Thanks, " + d.get("name") + ". ";
-  const a = document.createElement("a"); a.href = href; a.textContent = "Open it in your email app";
-  note.append(b, "Your enquiry is ready to send to " + EMAIL + ". ", a, ".");
-  location.href = href;
+  const thanks = () => { const b = document.createElement("b"); b.textContent = "Thanks, " + d.get("name") + ". "; return b; };
+  const mailFallback = (lead) => {
+    note.innerHTML = "";
+    const a = document.createElement("a"); a.href = href; a.textContent = "Open it in your email app";
+    note.append(thanks(), lead, a, ".");
+    location.href = href;
+  };
+  if (!WEB3FORMS_KEY) { mailFallback("Your enquiry is ready to send to " + EMAIL + ". "); return; }
+  if (d.get("botcheck")) return; // the hidden field only bots fill in
+  sendBtn.disabled = true; sendBtn.textContent = "Sending…"; note.textContent = "";
+  try {
+    const res = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        access_key: WEB3FORMS_KEY,
+        subject, from_name: "RN Fortis website",
+        replyto: d.get("email"),
+        Name: d.get("name"), Company: d.get("company") || "-", Email: d.get("email"),
+        "Product and volume": d.get("volume") || "-", Message: d.get("message") || "-",
+      }),
+    });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok || !out.success) throw new Error(out.message || res.status);
+    form.reset();
+    note.innerHTML = "";
+    note.append(thanks(), "Your enquiry is in our inbox. We'll reply to " + d.get("email") + ".");
+  } catch {
+    mailFallback("It didn't send from here, so it's ready in your email app instead. ");
+  } finally {
+    sendBtn.disabled = false; sendBtn.textContent = "Send enquiry";
+  }
 });
 
 if (import.meta.env.DEV) { window.__lenis = lenis; window.__ST = ScrollTrigger; window.__bgv = bgVideo; }

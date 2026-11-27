@@ -68,6 +68,7 @@ async function initVideo() {
 // Phones: iPhones won't reliably seek a paused video (Low Power Mode blocks it outright),
 // so they get the same film as 169 vertical frames drawn on a canvas as you scroll.
 const FRAMES = 169;
+const seqState = { loaded: 0, failed: 0, frame: -1, drawn: 0 };
 function initFrames() {
   if (STATIC_HERO.matches) return;
   const cv = document.getElementById("seq"), ctx = cv.getContext("2d");
@@ -82,12 +83,14 @@ function initFrames() {
   };
   function draw() {
     queued = false;
-    const img = pick(Math.round(shape(storyProgress()) * (FRAMES - 1)));
+    seqState.frame = Math.round(shape(storyProgress()) * (FRAMES - 1));
+    const img = pick(seqState.frame);
     if (!img || img === shownImg) return;
     shownImg = img;
     const s = Math.max(cv.width / img.naturalWidth, cv.height / img.naturalHeight);
     const w = img.naturalWidth * s, h = img.naturalHeight * s;
     ctx.drawImage(img, (cv.width - w) / 2, (cv.height - h) / 2, w, h);
+    seqState.drawn++;
   }
   const schedule = () => { if (!queued) { queued = true; requestAnimationFrame(draw); } };
   const size = () => {
@@ -104,11 +107,11 @@ function initFrames() {
     const i = order[next++], img = new Image();
     img.decoding = "async";
     img.onload = () => {
-      img.ok = true; imgs[i] = img;
+      img.ok = true; imgs[i] = img; seqState.loaded++;
       if (i === 0) document.body.classList.add("seq", "video-ready");
       schedule(); loadOne();
     };
-    img.onerror = loadOne;
+    img.onerror = () => { seqState.failed++; loadOne(); };
     img.src = `/frames/f${String(i + 1).padStart(3, "0")}.webp`;
   };
   for (let n = 0; n < 6; n++) loadOne();
@@ -118,6 +121,23 @@ function initFrames() {
   lenis.on("scroll", schedule);
 }
 PHONE ? initFrames() : initVideo();
+
+// ?debug shows what the hero film is doing, for checking on a real phone.
+if (location.search.includes("debug")) {
+  const box = document.createElement("pre");
+  box.style.cssText = "position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;margin:0;padding:10px;font:12px/1.4 ui-monospace,monospace;color:#fff;background:rgba(0,0,0,.8);border-radius:8px;white-space:pre-wrap;pointer-events:none";
+  document.body.append(box);
+  const show = () => {
+    box.textContent = [
+      "phone: " + PHONE + "   reduce motion: " + STATIC_HERO.matches,
+      "body: " + document.body.className,
+      "frames loaded " + seqState.loaded + "/" + FRAMES + ", failed " + seqState.failed,
+      "frame " + seqState.frame + ", drawn " + seqState.drawn + ", scrollY " + Math.round(scrollY),
+      navigator.userAgent.replace(/^Mozilla\/5\.0 /, ""),
+    ].join("\n");
+  };
+  show(); setInterval(show, 250);
+}
 
 // ---------- after the story, the resting frame dims behind the sections ----------
 gsap.to(".stage-dim", { opacity: 0.8, ease: "none",

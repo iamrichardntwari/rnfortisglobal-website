@@ -21,7 +21,7 @@ The site is a Cloudflare Worker that serves static assets. `wrangler.jsonc` poin
 - Node version: 22 (set by `.node-version`).
 
 ## Where enquiries go
-The site shows info@rnfortisglobal.com and sales@rnfortisglobal.com. The form doesn't send to a server. It checks the fields and opens the visitor's email app with the enquiry addressed to info@rnfortisglobal.com (the `EMAIL` constant in `src/main.js`).
+The site shows info@rnfortisglobal.com and sales@rnfortisglobal.com. The form sends enquiries to info@rnfortisglobal.com through Web3Forms (the `WEB3FORMS_KEY` constant in `src/main.js`; the key is public by design and only sends to that inbox). If sending fails, it opens the visitor's email app instead.
 
 ## Media
 - `public/film.mp4`: the scroll-scrubbed hero film (H.264, a keyframe every 8 frames). Phones and visitors who prefer reduced motion see `public/img/hero.jpg` instead.

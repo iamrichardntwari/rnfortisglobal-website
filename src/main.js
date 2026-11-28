@@ -193,7 +193,7 @@ document.querySelectorAll("[data-prefill]").forEach((a) => a.addEventListener("c
 // The access key is public by design (Web3Forms only ever sends to the inbox it was issued for).
 // Without a key the form falls back to opening the visitor's email app.
 const EMAIL = "info@rnfortisglobal.com";
-const WEB3FORMS_KEY = "";
+const WEB3FORMS_KEY = "a22c8e3f-836b-49ab-b3bd-2e0e0eed7b82";
 const form = document.getElementById("form"), note = document.getElementById("fnote");
 const sendBtn = form.querySelector('button[type="submit"]');
 form.addEventListener("submit", async (e) => {
